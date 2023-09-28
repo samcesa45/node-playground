@@ -116,6 +116,7 @@ app.put('/api/notes/:id', (request,response) => {
 
   const updatedNote = {
     ...notes[noteIndex],
+    id:id,
     content:updatedContent,
     important:!notes[noteIndex].important,
 
