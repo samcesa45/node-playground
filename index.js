@@ -1,4 +1,6 @@
-import express from 'express'
+import dotenv from 'dotenv'
+dotenv.config()
+import express, { urlencoded }  from 'express'
 import morgan from 'morgan'
 import cors from 'cors'
 const app = express()
@@ -12,16 +14,33 @@ const requestLogger = (request,response,next) => {
   next()
 }
 
-const allowedOrigins = ['http://localhost:5174']
-const options = { origin: allowedOrigins, credentials: true }
-
-app.use(cors(options));
-
-//json-parser
+// const allowedOrigins = ['http://localhost:3000'];
+// const options = {
+//   "Access-Control-Allow-Headers" :'http://localhost:3000',
+//                   origin:allowedOrigins,
+//                   // methods: ["GET", "POST"],
+//                   // credentials: true,
+//                 }
+app.use(cors())
 app.use(express.json())
-app.use(requestLogger)
-morgan(':method :url :status :res[content-length] - :response-time ms ')
+app.use(express.urlencoded({ extended:true }))
+// app.set('trust proxy', true)
+// app.use((req, res, next) => {
+//   res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000"); // the link of my front-end app on Netlify
+//   res.setHeader(
+//     "Access-Control-Allow-Headers",
+//     "Origin, X-Requested-With, Content-Type, Accept"
+//   );
+//   res.setHeader(
+//     "Access-Control-Allow-Methods",
+//     "GET, POST, PATCH, DELETE, OPTIONS"
+//   );
+//   res.setHeader('content-type', 'application/json');
+//   next();
+// });
+//json-parser
 
+// app.use(requestLogger)
 
 let notes = [
   {
@@ -89,6 +108,7 @@ app.delete('/api/notes/:id', (request,response) => {
   response.status(204).end()
 })
 
+
 const unknownEndpoint = (request,response) => {
   response.status(404).send({error:'unknown endpoint'})
 }
@@ -96,5 +116,6 @@ const unknownEndpoint = (request,response) => {
 app.use(unknownEndpoint)
 
 const PORT =process.env.PORT || 3001
-app.listen(PORT)
-console.log(`Server running on port ${PORT}`)
+app.listen(PORT,() => {
+  console.log(`Server running on port ${PORT}`)
+})
