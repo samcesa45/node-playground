@@ -102,6 +102,28 @@ app.post('/api/notes', (request,response) => {
   response.json(note)
 })
 
+app.put('/api/notes/:id', (request,response) => {
+  
+  const id = Number(request.params.id)
+  const updatedContent = request.body.content
+  const noteIndex = notes.findIndex(note => note.id === id)
+  if(noteIndex === -1) {
+    return response.status(400).json({
+      error:'Note not found'
+    })
+  }
+ 
+
+  const updatedNote = {
+    ...notes[noteIndex],
+    content:updatedContent,
+    important:!notes[noteIndex].important,
+
+  }
+  return response.json(updatedNote)
+
+})
+
 app.delete('/api/notes/:id', (request,response) => {
   const id = Number(request.params.id)
   notes = notes.filter(note => note.id !== id)
