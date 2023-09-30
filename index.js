@@ -1,9 +1,11 @@
-import dotenv from 'dotenv'
-dotenv.config()
+
 import express, { urlencoded }  from 'express'
 import morgan from 'morgan'
 import cors from 'cors'
+import { Note } from './config/database/connection.js'
+import { errorHandler } from './shared/error/error.js'
 const app = express()
+
 
 
 const requestLogger = (request,response,next) => {
@@ -14,74 +16,58 @@ const requestLogger = (request,response,next) => {
   next()
 }
 
-// const allowedOrigins = ['http://localhost:3000'];
-// const options = {
-//   "Access-Control-Allow-Headers" :'http://localhost:3000',
-//                   origin:allowedOrigins,
-//                   // methods: ["GET", "POST"],
-//                   // credentials: true,
-//                 }
+
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended:true }))
-// app.set('trust proxy', true)
-// app.use((req, res, next) => {
-//   res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000"); // the link of my front-end app on Netlify
-//   res.setHeader(
-//     "Access-Control-Allow-Headers",
-//     "Origin, X-Requested-With, Content-Type, Accept"
-//   );
-//   res.setHeader(
-//     "Access-Control-Allow-Methods",
-//     "GET, POST, PATCH, DELETE, OPTIONS"
-//   );
-//   res.setHeader('content-type', 'application/json');
-//   next();
-// });
-//json-parser
+app.use(requestLogger)
 
-// app.use(requestLogger)
-
-let notes = [
-  {
-    id:1,
-    content:'HTML is easy',
-    important:true 
-  },
-  {
-    id:2,
-    content:'Browser can execute only Javascript',
-    important:false 
-  },
-  {
-    id:3,
-    content:'GET and POST are the most important methods of HTT protocol',
-    important:true 
-  }
-]
+// let notes = [
+//   {
+//     id:1,
+//     content:'HTML is easy',
+//     important:true 
+//   },
+//   {
+//     id:2,
+//     content:'Browser can execute only Javascript',
+//     important:false 
+//   },
+//   {
+//     id:3,
+//     content:'GET and POST are the most important methods of HTT protocol',
+//     important:true 
+//   }
+// ]
 
 
 const generatedId = () => {
   const maxId = notes.length > 0 ? Math.max(...notes.map(n => n.id)) : 0
   return maxId + 1
 }
-app.get('/', (request,response) => {
-  response.send('<h1>Hello World!</h1>')
-})
+// app.get('/', (request,response) => {
+//   response.send('<h1>Hello World!</h1>')
+// })
 
 app.get('/api/notes', (request,response) => {
-  response.json(notes)
+  Note.find({}).then(notes => {
+    response.json(notes)
+  })
 })
 
-app.get('/api/notes/:id', (request, response) => {
-  const id = Number(request.params.id )
-  const note = notes.find(note => note.id === id)
+app.get('/api/notes/:id', (request, response,next) => {
+  const id = request.params.id 
   
-  if(note){
-    response.json(note)
-  }else {
-    response.status(404).end()
-  }
+  Note.findById(id)
+  .then((note) => {
+    if(note) {
+      response.json(note)
+    }else {
+      response.status(404).json({error:'note not found'})
+    }
+  }).catch((error) => next(error))
+  
+  
 })
 
 app.post('/api/notes', (request,response) => {
@@ -93,42 +79,42 @@ app.post('/api/notes', (request,response) => {
     })
   }
 
-  const note = {
-    content:body.content,
-    important:body.important || false,
-    id:generatedId()
-  }
-  notes = notes.concat(note)
-  response.json(note)
+ const note = new Note({
+  content:body.content,
+  important:body.important || false,
+ })
+
+  note.save().then(savedNote => {
+    response.json(savedNote)
+  }).catch((error) => {
+    response.status(500).json({error:"INTERNAL SERVER ERROR"})
+  })
 })
 
 app.put('/api/notes/:id', (request,response) => {
-  
-  const id = Number(request.params.id)
-  const updatedContent = request.body.content
-  const noteIndex = notes.findIndex(note => note.id === id)
-  if(noteIndex === -1) {
-    return response.status(400).json({
-      error:'Note not found'
-    })
+
+  const id = request.params.id
+  const body = request.body
+
+  const note = {
+    content:body.content,
+    important:body.important,
   }
- 
-
-  const updatedNote = {
-    ...notes[noteIndex],
-    id:id,
-    content:updatedContent,
-    important:!notes[noteIndex].important,
-
-  }
-  return response.json(updatedNote)
-
+  Note.findByIdAndUpdate(id,note,{new:true})
+  .then(updatedNote => {
+    response.json(updatedNote)
+  })
+  .catch(error => next(error))
 })
 
 app.delete('/api/notes/:id', (request,response) => {
-  const id = Number(request.params.id)
-  notes = notes.filter(note => note.id !== id)
+  const id = request.params.id
+ Note.findByIdAndRemove(id)
+ .then(result => {
   response.status(204).end()
+ })
+ .catch(error => next(error))
+  
 })
 
 
@@ -137,6 +123,7 @@ const unknownEndpoint = (request,response) => {
 }
 
 app.use(unknownEndpoint)
+app.use(errorHandler)
 
 const PORT =process.env.PORT || 3001
 app.listen(PORT,() => {
