@@ -70,14 +70,8 @@ app.get('/api/notes/:id', (request, response,next) => {
   
 })
 
-app.post('/api/notes', (request,response) => {
+app.post('/api/notes', (request,response,next) => {
   const body = request.body
-
-  if(!body.content) {
-    return response.status(400).json({
-      error:'content missing'
-    })
-  }
 
  const note = new Note({
   content:body.content,
@@ -86,9 +80,7 @@ app.post('/api/notes', (request,response) => {
 
   note.save().then(savedNote => {
     response.json(savedNote)
-  }).catch((error) => {
-    response.status(500).json({error:"INTERNAL SERVER ERROR"})
-  })
+  }).catch((error) => next(error))
 })
 
 app.put('/api/notes/:id', (request,response) => {
@@ -100,7 +92,7 @@ app.put('/api/notes/:id', (request,response) => {
     content:body.content,
     important:body.important,
   }
-  Note.findByIdAndUpdate(id,note,{new:true})
+  Note.findByIdAndUpdate(id,note,{new:true,runValidators:true,context:'query'})
   .then(updatedNote => {
     response.json(updatedNote)
   })
