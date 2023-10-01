@@ -1,12 +1,14 @@
 {
   "name": "node_playground",
   "version": "1.0.0",
+  "prettier": "prettier-airbnb-config",
   "description": "playground to improve my nodejs skills",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "lint": "eslint .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -34,6 +36,11 @@
     "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "eslint": "^8.50.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.28.1",
+    "nodemon": "^3.0.1",
+    "prettier": "^1.19.1",
+    "prettier-airbnb-config": "^1.0.0"
   }
 }
