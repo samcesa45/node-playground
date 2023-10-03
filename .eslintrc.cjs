@@ -1,7 +1,9 @@
 module.exports = {
   env: {
+    module:true,
     node: true,
     es2021: true,
+    'jest':true
   },
   extends: 'eslint:recommended',
   overrides: [
