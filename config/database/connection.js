@@ -1,11 +1,12 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import * as config from '../../utils/config.js';
 dotenv.config();
 
 mongoose.set('strictQuery', false);
 
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(config.MONGO_URI)
   .then(() => {
     console.log('### DATABASE CONNECTION ESTABLISHED SUCCESSFULLY');
   })
